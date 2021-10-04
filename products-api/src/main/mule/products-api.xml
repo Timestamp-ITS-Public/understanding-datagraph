@@ -1,0 +1,1047 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd">
+    <http:listener-config name="products-api-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="8081" />
+    </http:listener-config>
+    <apikit:config name="products-api-config" api="resource::af9a0fb9-6cd0-49d9-b432-2445ddf562a2:products-api:1.0.0:raml:zip:products-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <api-gateway:autodiscovery apiId="${api.autodiscovery}" ignoreBasePath="true" doc:name="API Autodiscovery" doc:id="5766cd37-4710-499f-bbce-02611ce05407" flowRef="products-api-main" />
+	<global-property doc:name="Global Property" doc:id="7b762ed3-b48a-4c87-a73b-d58fb0ac9681" name="api.autodiscovery" value="17284821" />
+	<flow name="products-api-main">
+        <http:listener config-ref="products-api-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="products-api-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Bad request"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">400</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Method not allowed"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">405</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not acceptable"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">406</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Unsupported media type"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">415</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not Implemented"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">501</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="products-api-console">
+        <http:listener config-ref="products-api-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="products-api-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="get:\products\(id):products-api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" doc:id="731411be-51c7-4c87-95e5-d7f3f18e13cb">
+            <ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var id = attributes.uriParams.'id'
+---
+{
+	([{
+		"id": "1",
+		"name": "Lamb - Sausage Casings",
+		"price": "€9,89",
+		"attributes": {
+			"weight": "0.9",
+			"origin": "Borås"
+		}
+	},
+  {
+		"id": "2",
+		"name": "Appetizer - Asian Shrimp Roll",
+		"price": "€6,14",
+		"attributes": {
+			"weight": "0.7",
+			"origin": "Pérama"
+		}
+	},
+  {
+		"id": "3",
+		"name": "Juice - V8, Tomato",
+		"price": "€0,52",
+		"attributes": {
+			"weight": "0.8",
+			"origin": "Guolemude"
+		}
+	},
+  {
+		"id": "4",
+		"name": "Tendrils - Baby Pea, Organic",
+		"price": "€3,94",
+		"attributes": {
+			"weight": "1",
+			"origin": "Zhiryatino"
+		}
+	},
+  {
+		"id": "5",
+		"name": "Fuji Apples",
+		"price": "€3,39",
+		"attributes": {
+			"weight": "0.9",
+			"origin": "Pau"
+		}
+	},
+  {
+		"id": "6",
+		"name": "Bread - Sour Batard",
+		"price": "€9,00",
+		"attributes": {
+			"weight": "0.6",
+			"origin": "Krajan Dermawuharjo"
+		}
+	},
+  {
+		"id": "7",
+		"name": "Table Cloth - 53x69 Colour",
+		"price": "€7,26",
+		"attributes": {
+			"weight": "0.6",
+			"origin": "Sambonggede"
+		}
+	},
+  {
+		"id": "8",
+		"name": "Shiro Miso",
+		"price": "€1,07",
+		"attributes": {
+			"weight": "0.8",
+			"origin": "Chaem Luang"
+		}
+	},
+  {
+		"id": "9",
+		"name": "Flavouring - Raspberry",
+		"price": "€1,17",
+		"attributes": {
+			"weight": "0.7",
+			"origin": "Ash Shaddādah"
+		}
+	},
+  {
+		"id": "10",
+		"name": "Pork - Chop, Frenched",
+		"price": "€6,87",
+		"attributes": {
+			"weight": "0.8",
+			"origin": "Lebedyn"
+		}
+	},
+  {
+		"id": "11",
+		"name": "Bread - Kimel Stick Poly",
+		"price": "€4,48",
+		"attributes": {
+			"weight": "0.8",
+			"origin": "Liuji"
+		}
+	},
+  {
+		"id": "12",
+		"name": "Rice Wine - Aji Mirin",
+		"price": "€8,49",
+		"attributes": {
+			"weight": "0.9",
+			"origin": "Nis’oni"
+		}
+	},
+  {
+		"id": "13",
+		"name": "Veal - Loin",
+		"price": "€8,52",
+		"attributes": {
+			"weight": "0.8",
+			"origin": "Zhenlai"
+		}
+	},
+  {
+		"id": "14",
+		"name": "Wine - Stoneliegh Sauvignon",
+		"price": "€0,52",
+		"attributes": {
+			"weight": "0.7",
+			"origin": "Fatumnasi"
+		}
+	},
+  {
+		"id": "15",
+		"name": "Muffin Mix - Corn Harvest",
+		"price": "€4,24",
+		"attributes": {
+			"weight": "0.8",
+			"origin": "Tonghong"
+		}
+	},
+  {
+		"id": "16",
+		"name": "Pasta - Fusili Tri - Coloured",
+		"price": "€1,91",
+		"attributes": {
+			"weight": "1",
+			"origin": "Várzea de Sintra"
+		}
+	},
+  {
+		"id": "17",
+		"name": "Soup Campbells Split Pea And Ham",
+		"price": "€0,22",
+		"attributes": {
+			"weight": "0.8",
+			"origin": "Jinlong"
+		}
+	},
+  {
+		"id": "18",
+		"name": "Syrup - Chocolate",
+		"price": "€0,69",
+		"attributes": {
+			"weight": "0.5",
+			"origin": "São Luís"
+		}
+	},
+  {
+		"id": "19",
+		"name": "Port - 74 Brights",
+		"price": "€4,18",
+		"attributes": {
+			"weight": "0.8",
+			"origin": "Weiyanggong"
+		}
+	},
+  {
+		"id": "20",
+		"name": "Pepper - Pablano",
+		"price": "€6,54",
+		"attributes": {
+			"weight": "0.9",
+			"origin": "Vidual"
+		}
+	},
+  {
+		"id": "21",
+		"name": "Wine - Red, Wolf Blass, Yellow",
+		"price": "€2,85",
+		"attributes": {
+			"weight": "0.7",
+			"origin": "Shakhtars’k"
+		}
+	},
+  {
+		"id": "22",
+		"name": "Flour - Strong",
+		"price": "€7,42",
+		"attributes": {
+			"weight": "0.8",
+			"origin": "Keratéa"
+		}
+	},
+  {
+		"id": "23",
+		"name": "Quail Eggs - Canned",
+		"price": "€6,13",
+		"attributes": {
+			"weight": "0.8",
+			"origin": "Dawang"
+		}
+	},
+  {
+		"id": "24",
+		"name": "Cocoa Feuilletine",
+		"price": "€4,05",
+		"attributes": {
+			"weight": "0.7",
+			"origin": "Limbuhan"
+		}
+	},
+  {
+		"id": "25",
+		"name": "Soup - Campbells, Beef Barley",
+		"price": "€6,79",
+		"attributes": {
+			"weight": "1",
+			"origin": "Dębno"
+		}
+	},
+  {
+		"id": "26",
+		"name": "French Pastries",
+		"price": "€9,06",
+		"attributes": {
+			"weight": "1",
+			"origin": "Osa"
+		}
+	},
+  {
+		"id": "27",
+		"name": "Cheese - Grie Des Champ",
+		"price": "€5,68",
+		"attributes": {
+			"weight": "0.6",
+			"origin": "Tegalagung"
+		}
+	},
+  {
+		"id": "28",
+		"name": "Juice - Apple 284ml",
+		"price": "€0,42",
+		"attributes": {
+			"weight": "0.9",
+			"origin": "Omigawa"
+		}
+	},
+  {
+		"id": "29",
+		"name": "Rice - 7 Grain Blend",
+		"price": "€7,64",
+		"attributes": {
+			"weight": "0.6",
+			"origin": "Ujmisht"
+		}
+	},
+  {
+		"id": "30",
+		"name": "Rice - Jasmine Sented",
+		"price": "€1,22",
+		"attributes": {
+			"weight": "0.8",
+			"origin": "Gaïtánion"
+		}
+	},
+  {
+		"id": "31",
+		"name": "Onions - Red Pearl",
+		"price": "€5,38",
+		"attributes": {
+			"weight": "0.9",
+			"origin": "Usicayos"
+		}
+	},
+  {
+		"id": "32",
+		"name": "Asparagus - White, Fresh",
+		"price": "€5,48",
+		"attributes": {
+			"weight": "0.9",
+			"origin": "Temyasovo"
+		}
+	},
+  {
+		"id": "33",
+		"name": "Steel Wool S.o.s",
+		"price": "€9,50",
+		"attributes": {
+			"weight": "0.8",
+			"origin": "Mpika"
+		}
+	},
+  {
+		"id": "34",
+		"name": "Beef Flat Iron Steak",
+		"price": "€0,35",
+		"attributes": {
+			"weight": "0.7",
+			"origin": "Sechenovo"
+		}
+	},
+  {
+		"id": "35",
+		"name": "Rhubarb",
+		"price": "€6,28",
+		"attributes": {
+			"weight": "0.7",
+			"origin": "Lincheng"
+		}
+	},
+  {
+		"id": "36",
+		"name": "Chips Potato Reg 43g",
+		"price": "€1,09",
+		"attributes": {
+			"weight": "0.7",
+			"origin": "Shanxia"
+		}
+	},
+  {
+		"id": "37",
+		"name": "Wine - Bourgogne 2002, La",
+		"price": "€0,86",
+		"attributes": {
+			"weight": "0.7",
+			"origin": "Yuefeng"
+		}
+	},
+  {
+		"id": "38",
+		"name": "Island Oasis - Pina Colada",
+		"price": "€1,95",
+		"attributes": {
+			"weight": "0.6",
+			"origin": "Oak Bay"
+		}
+	},
+  {
+		"id": "39",
+		"name": "Potatoes - Peeled",
+		"price": "€6,13",
+		"attributes": {
+			"weight": "0.7",
+			"origin": "Sölvesborg"
+		}
+	},
+  {
+		"id": "40",
+		"name": "Cheese - Ermite Bleu",
+		"price": "€8,13",
+		"attributes": {
+			"weight": "0.6",
+			"origin": "Yashalta"
+		}
+	},
+  {
+		"id": "41",
+		"name": "Longos - Chicken Wings",
+		"price": "€9,67",
+		"attributes": {
+			"weight": "0.8",
+			"origin": "Calape"
+		}
+	},
+  {
+		"id": "42",
+		"name": "Pork - Ham Hocks - Smoked",
+		"price": "€4,75",
+		"attributes": {
+			"weight": "0.6",
+			"origin": "Baisha"
+		}
+	},
+  {
+		"id": "43",
+		"name": "Napkin Colour",
+		"price": "€1,99",
+		"attributes": {
+			"weight": "0.6",
+			"origin": "Rivesaltes"
+		}
+	},
+  {
+		"id": "44",
+		"name": "Sauce - Mint",
+		"price": "€1,70",
+		"attributes": {
+			"weight": "0.5",
+			"origin": "Wudong"
+		}
+	},
+  {
+		"id": "45",
+		"name": "Lobster - Tail 6 Oz",
+		"price": "€9,45",
+		"attributes": {
+			"weight": "0.6",
+			"origin": "Chiang Yuen"
+		}
+	},
+  {
+		"id": "46",
+		"name": "Pastry - Key Limepoppy Seed Tea",
+		"price": "€8,86",
+		"attributes": {
+			"weight": "0.6",
+			"origin": "Kulary"
+		}
+	},
+  {
+		"id": "47",
+		"name": "Pepper - Yellow Bell",
+		"price": "€5,80",
+		"attributes": {
+			"weight": "0.5",
+			"origin": "Guadalupe Victoria"
+		}
+	},
+  {
+		"id": "48",
+		"name": "Pants Custom Dry Clean",
+		"price": "€5,97",
+		"attributes": {
+			"weight": "0.6",
+			"origin": "Kadoma"
+		}
+	},
+  {
+		"id": "49",
+		"name": "Dikon",
+		"price": "€6,64",
+		"attributes": {
+			"weight": "1",
+			"origin": "Camaquã"
+		}
+	},
+  {
+		"id": "50",
+		"name": "Tart Shells - Sweet, 2",
+		"price": "€4,29",
+		"attributes": {
+			"weight": "0.7",
+			"origin": "Lagayan"
+		}
+	},
+  {
+		"id": "51",
+		"name": "Napkin - Beverge, White 2 - Ply",
+		"price": "€1,86",
+		"attributes": {
+			"weight": "0.9",
+			"origin": "Eskilstuna"
+		}
+	},
+  {
+		"id": "52",
+		"name": "Bread - Raisin Walnut Pull",
+		"price": "€0,96",
+		"attributes": {
+			"weight": "0.5",
+			"origin": "Pingshan"
+		}
+	},
+  {
+		"id": "53",
+		"name": "Egg Patty Fried",
+		"price": "€7,38",
+		"attributes": {
+			"weight": "0.6",
+			"origin": "Washington"
+		}
+	},
+  {
+		"id": "54",
+		"name": "Jagermeister",
+		"price": "€9,22",
+		"attributes": {
+			"weight": "0.7",
+			"origin": "Cruzeiro"
+		}
+	},
+  {
+		"id": "55",
+		"name": "Rice - Basmati",
+		"price": "€9,01",
+		"attributes": {
+			"weight": "0.8",
+			"origin": "Rennes"
+		}
+	},
+  {
+		"id": "56",
+		"name": "Ginger - Crystalized",
+		"price": "€3,26",
+		"attributes": {
+			"weight": "0.9",
+			"origin": "Xambabazar"
+		}
+	},
+  {
+		"id": "57",
+		"name": "Pasta - Lasagna Noodle, Frozen",
+		"price": "€3,30",
+		"attributes": {
+			"weight": "0.7",
+			"origin": "Kimitsu"
+		}
+	},
+  {
+		"id": "58",
+		"name": "Red Currant Jelly",
+		"price": "€2,45",
+		"attributes": {
+			"weight": "0.9",
+			"origin": "Juntang"
+		}
+	},
+  {
+		"id": "59",
+		"name": "Sour Puss Sour Apple",
+		"price": "€5,71",
+		"attributes": {
+			"weight": "0.9",
+			"origin": "Casal de Cambra"
+		}
+	},
+  {
+		"id": "60",
+		"name": "Aspic - Amber",
+		"price": "€9,31",
+		"attributes": {
+			"weight": "0.5",
+			"origin": "Bystrytsya"
+		}
+	},
+  {
+		"id": "61",
+		"name": "Guava",
+		"price": "€1,16",
+		"attributes": {
+			"weight": "0.9",
+			"origin": "Aldana"
+		}
+	},
+  {
+		"id": "62",
+		"name": "Brocolinni - Gaylan, Chinese",
+		"price": "€1,60",
+		"attributes": {
+			"weight": "0.7",
+			"origin": "Kozakai-chō"
+		}
+	},
+  {
+		"id": "63",
+		"name": "Mix - Cocktail Strawberry Daiquiri",
+		"price": "€0,35",
+		"attributes": {
+			"weight": "0.6",
+			"origin": "Bulangan"
+		}
+	},
+  {
+		"id": "64",
+		"name": "Pepper - Julienne, Frozen",
+		"price": "€7,92",
+		"attributes": {
+			"weight": "0.6",
+			"origin": "Oklahoma City"
+		}
+	},
+  {
+		"id": "65",
+		"name": "Vinegar - White",
+		"price": "€3,27",
+		"attributes": {
+			"weight": "1",
+			"origin": "Calbuco"
+		}
+	},
+  {
+		"id": "66",
+		"name": "Eel - Smoked",
+		"price": "€3,96",
+		"attributes": {
+			"weight": "0.5",
+			"origin": "Nyangao"
+		}
+	},
+  {
+		"id": "67",
+		"name": "Chinese Foods - Plain Fried Rice",
+		"price": "€3,11",
+		"attributes": {
+			"weight": "0.8",
+			"origin": "Lijiaping"
+		}
+	},
+  {
+		"id": "68",
+		"name": "Chilli Paste, Ginger Garlic",
+		"price": "€5,92",
+		"attributes": {
+			"weight": "0.6",
+			"origin": "La Huerta"
+		}
+	},
+  {
+		"id": "69",
+		"name": "Kiwi Gold Zespri",
+		"price": "€3,19",
+		"attributes": {
+			"weight": "0.7",
+			"origin": "Gunungkendeng"
+		}
+	},
+  {
+		"id": "70",
+		"name": "Ice Cream Bar - Oreo Sandwich",
+		"price": "€6,59",
+		"attributes": {
+			"weight": "0.8",
+			"origin": "Jiayi"
+		}
+	},
+  {
+		"id": "71",
+		"name": "Bread - Corn Muffaletta",
+		"price": "€6,52",
+		"attributes": {
+			"weight": "0.9",
+			"origin": "Forshaga"
+		}
+	},
+  {
+		"id": "72",
+		"name": "Beef - Sushi Flat Iron Steak",
+		"price": "€3,46",
+		"attributes": {
+			"weight": "1",
+			"origin": "Diepsloot"
+		}
+	},
+  {
+		"id": "73",
+		"name": "Container - Hngd Cll Blk 7x7x3",
+		"price": "€8,94",
+		"attributes": {
+			"weight": "0.8",
+			"origin": "Castres"
+		}
+	},
+  {
+		"id": "74",
+		"name": "Lotus Root",
+		"price": "€1,58",
+		"attributes": {
+			"weight": "0.9",
+			"origin": "Alqueidão"
+		}
+	},
+  {
+		"id": "75",
+		"name": "Salt - Sea",
+		"price": "€3,53",
+		"attributes": {
+			"weight": "0.7",
+			"origin": "Huntsville"
+		}
+	},
+  {
+		"id": "76",
+		"name": "Crab - Dungeness, Whole",
+		"price": "€6,53",
+		"attributes": {
+			"weight": "0.7",
+			"origin": "Nagpandayan"
+		}
+	},
+  {
+		"id": "77",
+		"name": "Beef - Montreal Smoked Brisket",
+		"price": "€9,44",
+		"attributes": {
+			"weight": "0.8",
+			"origin": "Longquan"
+		}
+	},
+  {
+		"id": "78",
+		"name": "Tomatoes Tear Drop Yellow",
+		"price": "€1,96",
+		"attributes": {
+			"weight": "1",
+			"origin": "Verkhniye Osel’ki"
+		}
+	},
+  {
+		"id": "79",
+		"name": "Soup Campbells - Italian Wedding",
+		"price": "€8,14",
+		"attributes": {
+			"weight": "0.5",
+			"origin": "Port Saint Lucie"
+		}
+	},
+  {
+		"id": "80",
+		"name": "Knife Plastic - White",
+		"price": "€4,90",
+		"attributes": {
+			"weight": "0.8",
+			"origin": "Bagok"
+		}
+	},
+  {
+		"id": "81",
+		"name": "Sea Urchin",
+		"price": "€1,25",
+		"attributes": {
+			"weight": "0.6",
+			"origin": "Pedrulheira"
+		}
+	},
+  {
+		"id": "82",
+		"name": "Soup Campbells Beef With Veg",
+		"price": "€7,10",
+		"attributes": {
+			"weight": "0.9",
+			"origin": "Blatná"
+		}
+	},
+  {
+		"id": "83",
+		"name": "Tea - Darjeeling, Azzura",
+		"price": "€9,89",
+		"attributes": {
+			"weight": "0.8",
+			"origin": "Guihuaquan"
+		}
+	},
+  {
+		"id": "84",
+		"name": "Chicken - Diced, Cooked",
+		"price": "€8,60",
+		"attributes": {
+			"weight": "0.6",
+			"origin": "Xin’an"
+		}
+	},
+  {
+		"id": "85",
+		"name": "Vermouth - Sweet, Cinzano",
+		"price": "€5,07",
+		"attributes": {
+			"weight": "0.9",
+			"origin": "Shikhazany"
+		}
+	},
+  {
+		"id": "86",
+		"name": "Flower - Potmums",
+		"price": "€6,91",
+		"attributes": {
+			"weight": "0.9",
+			"origin": "Buenavista"
+		}
+	},
+  {
+		"id": "87",
+		"name": "Energy Drink - Franks Original",
+		"price": "€8,27",
+		"attributes": {
+			"weight": "0.8",
+			"origin": "Doghs"
+		}
+	},
+  {
+		"id": "88",
+		"name": "Mousse - Banana Chocolate",
+		"price": "€9,04",
+		"attributes": {
+			"weight": "0.7",
+			"origin": "San Francisco"
+		}
+	},
+  {
+		"id": "89",
+		"name": "Sauce - Oyster",
+		"price": "€6,92",
+		"attributes": {
+			"weight": "1",
+			"origin": "Ambarawa"
+		}
+	},
+  {
+		"id": "90",
+		"name": "Tea - Darjeeling, Azzura",
+		"price": "€2,91",
+		"attributes": {
+			"weight": "0.8",
+			"origin": "Jiguan"
+		}
+	},
+  {
+		"id": "91",
+		"name": "Sauce - Marinara",
+		"price": "€2,30",
+		"attributes": {
+			"weight": "1",
+			"origin": "Daojiang"
+		}
+	},
+  {
+		"id": "92",
+		"name": "Peas - Pigeon, Dry",
+		"price": "€2,40",
+		"attributes": {
+			"weight": "0.9",
+			"origin": "Bianba"
+		}
+	},
+  {
+		"id": "93",
+		"name": "Veal - Tenderloin, Untrimmed",
+		"price": "€4,91",
+		"attributes": {
+			"weight": "0.6",
+			"origin": "Karnobat"
+		}
+	},
+  {
+		"id": "94",
+		"name": "Juice - Lemon",
+		"price": "€9,71",
+		"attributes": {
+			"weight": "0.7",
+			"origin": "Gagnoa"
+		}
+	},
+  {
+		"id": "95",
+		"name": "Huck White Towels",
+		"price": "€5,72",
+		"attributes": {
+			"weight": "0.9",
+			"origin": "Kuluran"
+		}
+	},
+  {
+		"id": "96",
+		"name": "Onions - Pearl",
+		"price": "€1,81",
+		"attributes": {
+			"weight": "0.7",
+			"origin": "Nakhon Phanom"
+		}
+	},
+  {
+		"id": "97",
+		"name": "Wine - Puligny Montrachet A.",
+		"price": "€1,33",
+		"attributes": {
+			"weight": "0.6",
+			"origin": "Zhangxiang"
+		}
+	},
+  {
+		"id": "98",
+		"name": "Macaroons - Homestyle Two Bit",
+		"price": "€0,85",
+		"attributes": {
+			"weight": "0.7",
+			"origin": "Great Neck"
+		}
+	},
+  {
+		"id": "99",
+		"name": "Danishes - Mini Raspberry",
+		"price": "€9,42",
+		"attributes": {
+			"weight": "1",
+			"origin": "Darfield"
+		}
+	},
+  {
+		"id": "100",
+		"name": "Pepper - Orange",
+		"price": "€2,43",
+		"attributes": {
+			"weight": "0.7",
+			"origin": "Hengduo"
+		}
+	}] filter $.id == id)
+}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" message="get:\products\(id):products-api-config" />
+    </flow>
+</mule>
